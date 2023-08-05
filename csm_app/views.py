@@ -17,21 +17,21 @@ class UserViewSet(viewsets.ViewSet):
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response({"message": "User successfully created"}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def retrieve(self, request, pk=None):
         user = self.get_task(pk)
         print(user)
         serializer = UserSerializer(user)
-        return Response(serializer.data)
-
+        return Response(serializer.data) 
+    
     def update(self, request, pk=None):
         user = self.get_task(pk)
         serializer = UserSerializer(user, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
+            return Response({"message": "User successfully updated"},status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def partial_update(self, request, pk=None):
@@ -57,18 +57,9 @@ class UserViewSet(viewsets.ViewSet):
 
 class PostViewSet(viewsets.ViewSet):
     def list(self, request):
-        # data = request.body
-        # json_data = data.decode('utf-8')
-        # parsed_data = json.loads(json_data)
-        # pub_status = parsed_data['status']
-        # print("status",pub_status)
-        # if pub_status == "public":
         posts = Posts.objects.filter(status='public')
         serializer = PostsSerializer(posts, many=True)
         return Response(serializer.data)
-        # return Response(
-        #     {'message': "you do not have permission to do this action"},
-        #     status=status.HTTP_403_FORBIDDEN)
         
     def create(self, request):
         serializer = PostsSerializer(data=request.data)
@@ -84,39 +75,48 @@ class PostViewSet(viewsets.ViewSet):
 
     def update(self, request, pk=None):
         posts = self.get_task(pk)
-        print('task',posts)
-        if request.user != posts.created_by:
-            return Response(
-            {'message': "you do not have permission to do this action"},
-            status=status.HTTP_403_FORBIDDEN)
         serializer = PostsSerializer(posts, data=request.data)
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            if request.data['created_by'] == posts.created_by_id:
+                serializer.save()
+                return Response(
+                {'message': "your details are updated"},
+                status=status.HTTP_200_OK)
+            else:
+                return Response(
+                {'message': "you do not have permission to do this action"},
+                status=status.HTTP_403_FORBIDDEN)
+        else:       
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def partial_update(self, request, pk=None):
         posts = self.get_task(pk)
-        print('task',posts.created_by)
-        if request.user != posts.created_by:
-            return Response(
-            {'message': "you do not have permission to do this action"},
-            status=status.HTTP_403_FORBIDDEN)
         serializer = PostsSerializer(posts, data=request.data, partial=True)
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            if request.data['created_by'] == posts.created_by_id:
+                serializer.save()
+                return Response(
+                {'message': "your details are updated"},
+                status=status.HTTP_200_OK)
+            else:
+                return Response(
+                {'message': "you do not have permission to do this action"},
+                status=status.HTTP_403_FORBIDDEN)
+        else:          
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def destroy(self, request, pk=None):
         posts = self.get_task(pk)
-        if request.user != posts.created_by:
+        if request.data['created_by'] == posts.created_by_id:
+                posts.delete()
+                return Response(
+                {'message': "your details are deleted"},
+                status=status.HTTP_200_OK)
+        else:
             return Response(
             {'message': "you do not have permission to do this action"},
             status=status.HTTP_403_FORBIDDEN)
-        posts.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
+    
     def get_task(self, pk):
         try:
             return Posts.objects.get(pk=pk)

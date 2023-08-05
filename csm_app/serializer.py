@@ -3,9 +3,14 @@ from .models import User,Posts,Likes
 
 
 class UserSerializer(serializers.ModelSerializer):
+    # name = serializers.CharField(max_length=30)
+    # email =  serializers.EmailField()
+    user_id = serializers.CharField(read_only= True)
+    password = serializers.CharField(write_only = True)
     class Meta:
         model = User
         fields = '__all__'
+        # extra_kwargs = {'password':{'write_only': True }}        
 
 class PostsSerializer(serializers.ModelSerializer):
     likes_count = serializers.SerializerMethodField()

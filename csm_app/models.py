@@ -13,7 +13,7 @@ class CustomUserManager(BaseUserManager):
 
 class User(AbstractBaseUser):
     user_id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=30, unique=True)
+    name = models.CharField(max_length=30)
     email = models.EmailField(unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -22,9 +22,6 @@ class User(AbstractBaseUser):
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['name']
-
-    def __str__(self):
-        return self.name
 
 class Posts(models.Model):
     post_id = models.AutoField(primary_key=True)
